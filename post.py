@@ -1,52 +1,94 @@
 # -*- coding: utf-8 -*-
-
+import random
+import time
 import tweetpony
-import os
-import sqlite3
 import urllib2
-import json 
+import json
 
 from config import config
 
+
 def fetch(url):
     req = urllib2.Request(url)
-    response=urllib2.urlopen(req)
+    response = urllib2.urlopen(req)
     return response.read()
 
-def getJSON():
-	return json.loads(fetch("http://weather.spychalski.info/api.php"))
+
+def get_json():
+    return json.loads(fetch("http://weather.spychalski.info/api.php"))
+
 
 def main():
-	api = tweetpony.API(consumer_key = config['consumer_key'], consumer_secret = config['consumer_secret'], access_token = config['access_token'], access_token_secret = config['access_token_secret'])
-	user = api.user
+    api = tweetpony.API(consumer_key=config['consumer_key'], consumer_secret=config['consumer_secret'],
+                        access_token=config['access_token'], access_token_secret=config['access_token_secret'])
 
-	#conn = sqlite3.connect('/home/pi/WeatherStation/data.db')
+    # noinspection PyStatementEffect
+    api.user
 
-	#cur = conn.cursor()
-	#cur.execute('SELECT Temperature, Humidity FROM readouts_external ORDER BY `Date` DESC LIMIT 1')
+    weather_data = get_json()
 
-	#data = cur.fetchone()
+    temperature = int(round(weather_data['Temperature']))
+    humidity = int(round(weather_data['Humidity']))
+    pressure = int(round(weather_data['Pressure']))
 
-	#if data == None:
-	#	exit()
+    try:
 
-	#conn.close()
+        # print weather_data
 
-	jData = getJSON()
+        message_type = 1
 
-	iTemp = int(round(jData['Temperature']))
-	iHumidity = int(round(jData['Humidity']))
-	iPressure = int(round(jData['Pressure']))
+        current_hour = int(time.strftime("%H"))
 
-	try:
+        if current_hour >= 6 and current_hour <= 10:
+            message_type = 2
+        elif current_hour >= 19 and current_hour <= 23:
+            message_type = 3
 
-		text = u'Witaj Szczecinie, mamy ' + unicode(str(iTemp)) + u'C i ' + unicode(str(iHumidity)) + u'% wilgotności. Ciśnienie wynosi ' + unicode(str(iPressure)) + 'hPa #szczecin #pogoda'
+        text = ''
 
-		api.update_status(status = text)
-	except tweetpony.APIError as err:
-		print "Oops, something went wrong! Twitter returned error #%i and said: %s" % (err.code, err.description)
-	else:
-		print "Yay! Your tweet has been sent!"
+        if message_type == 1:
+            text = u'Witaj Szczecinie, mamy ' + unicode(str(temperature)) + u'C i ' + unicode(
+                str(humidity)) + u'% wilgotności. Ciśnienie wynosi ' + unicode(str(pressure)) + 'hPa #szczecin #pogoda'
+        elif message_type == 2:
+            text = u'Prognoza na dziś: ' + unicode(
+                str(int(round(weather_data['Forecast'][0]['TempDay'])))) + u'C, ciśnienie ' + \
+                   unicode(str(pressure)) + u'hPa, wiatr ' + unicode(
+                str(int(round(weather_data['Forecast'][0]['WindSpeed'])))) + u'm/s, '
+
+            if weather_data['Forecast'][0]['Rain'] > 0 and weather_data['Forecast'][0]['Snow'] == 0:
+                text += u'będzie padać'
+            elif weather_data['Forecast'][0]['Rain'] == 0 and weather_data['Forecast'][0]['Snow'] > 0:
+                text += u'będzie padać śnieg'
+            elif weather_data['Forecast'][0]['Rain'] > 0 and weather_data['Forecast'][0]['Snow'] > 0:
+                text += u'będzie padać śnieg z deszczem'
+            else:
+                text += u'brak opadów'
+
+            text += ' #pogoda #szczecin'
+        elif message_type == 3:
+            text = u'Prognoza na jutro: ' + unicode(
+                str(int(round(weather_data['Forecast'][1]['TempDay'])))) + u'C, ciśnienie ' + \
+                   unicode(str(pressure)) + u'hPa, wiatr ' + unicode(
+                str(int(round(weather_data['Forecast'][1]['WindSpeed'])))) + u'm/s, '
+
+            if weather_data['Forecast'][1]['Rain'] > 0 and weather_data['Forecast'][1]['Snow'] == 0:
+                text += u'będzie padać'
+            elif weather_data['Forecast'][1]['Rain'] == 0 and weather_data['Forecast'][1]['Snow'] > 0:
+                text += u'będzie padać śnieg'
+            elif weather_data['Forecast'][1]['Rain'] > 0 and weather_data['Forecast'][1]['Snow'] > 0:
+                text += u'będzie padać śnieg z deszczem'
+            else:
+                text += u'brak opadów'
+
+            text += ' #pogoda #szczecin'
+
+        # print text
+        api.update_status(status=text)
+    except tweetpony.APIError as err:
+        print "Oops, something went wrong! Twitter returned error #%i and said: %s" % (err.code, err.description)
+    else:
+        print "Yay! Your tweet has been sent!"
+
 
 if __name__ == "__main__":
-	main()
+    main()
