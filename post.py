@@ -27,9 +27,9 @@ def main():
 
     weather_data = get_json()
 
-    temperature = int(round(weather_data['Temperature']))
-    humidity = int(round(weather_data['Humidity']))
-    pressure = int(round(weather_data['Pressure']))
+    temperature = int(round(float(weather_data['Temperature'])))
+    humidity = int(round(float(weather_data['Humidity'])))
+    pressure = int(round(float(weather_data['Pressure'])))
 
     try:
 
@@ -51,15 +51,18 @@ def main():
                 str(humidity)) + u'% wilgotności. Ciśnienie wynosi ' + unicode(str(pressure)) + 'hPa #szczecin #pogoda'
         elif message_type == 2:
             text = u'Prognoza na dziś: ' + unicode(
-                str(int(round(weather_data['Forecast'][0]['TempDay'])))) + u'C, ciśnienie ' + \
+                str(int(round(float(weather_data['Forecast'][0]['TempDay']))))) + u'C, ciśnienie ' + \
                    unicode(str(pressure)) + u'hPa, wiatr ' + unicode(
-                str(int(round(weather_data['Forecast'][0]['WindSpeed'])))) + u'm/s, '
+                str(int(round(float(weather_data['Forecast'][0]['WindSpeed']))))) + u'm/s, '
 
-            if weather_data['Forecast'][0]['Rain'] > 0 and weather_data['Forecast'][0]['Snow'] == 0:
+            rain = float(weather_data['Forecast'][0]['Rain'])
+            snow = float(weather_data['Forecast'][0]['Snow'])
+
+            if rain > 0 and snow == 0:
                 text += u'będzie padać'
-            elif weather_data['Forecast'][0]['Rain'] == 0 and weather_data['Forecast'][0]['Snow'] > 0:
+            elif rain == 0 and snow > 0:
                 text += u'będzie padać śnieg'
-            elif weather_data['Forecast'][0]['Rain'] > 0 and weather_data['Forecast'][0]['Snow'] > 0:
+            elif rain > 0 and snow > 0:
                 text += u'będzie padać śnieg z deszczem'
             else:
                 text += u'brak opadów'
@@ -67,15 +70,18 @@ def main():
             text += ' #pogoda #szczecin'
         elif message_type == 3:
             text = u'Prognoza na jutro: ' + unicode(
-                str(int(round(weather_data['Forecast'][1]['TempDay'])))) + u'C, ciśnienie ' + \
+                str(int(round(float(weather_data['Forecast'][1]['TempDay']))))) + u'C, ciśnienie ' + \
                    unicode(str(pressure)) + u'hPa, wiatr ' + unicode(
-                str(int(round(weather_data['Forecast'][1]['WindSpeed'])))) + u'm/s, '
+                str(int(round(float(weather_data['Forecast'][1]['WindSpeed']))))) + u'm/s, '
 
-            if weather_data['Forecast'][1]['Rain'] > 0 and weather_data['Forecast'][1]['Snow'] == 0:
+            rain = float(weather_data['Forecast'][1]['Rain'])
+            snow = float(weather_data['Forecast'][1]['Snow'])
+
+            if rain > 0 and snow == 0:
                 text += u'będzie padać'
-            elif weather_data['Forecast'][1]['Rain'] == 0 and weather_data['Forecast'][1]['Snow'] > 0:
+            elif rain == 0 and snow > 0:
                 text += u'będzie padać śnieg'
-            elif weather_data['Forecast'][1]['Rain'] > 0 and weather_data['Forecast'][1]['Snow'] > 0:
+            elif rain > 0 and snow > 0:
                 text += u'będzie padać śnieg z deszczem'
             else:
                 text += u'brak opadów'
